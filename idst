@@ -1,0 +1,16 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Very tiny Termux image-create+untar (personal use)
+set -e
+
+TAR=${1:-}; NAME=${2:-}; SIZE=${3:-2G}
+HOME=/data/data/com.termux/files/home
+IMG="$HOME/img/$NAME.img"; MNT="$HOME/mnt"
+
+[ -n "$TAR" ] || { echo "usage: $0 rootfs.tar.gz name [size]"; exit 1; }
+mkdir -p "${IMG%/*}" "$MNT"
+fallocate -l "$SIZE" "$IMG"
+mkfs.ext4 -F "$IMG"
+mount -o loop,suid,dev "$IMG" "$MNT"
+tar xpf "$TAR" -C "$MNT" --strip-components=1
+sync; umount "$MNT"
+echo "Created $IMG"
