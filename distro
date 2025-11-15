@@ -1,0 +1,28 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+# exit or error
+set -e
+
+h=/data/data/com.termux/files/home
+t="$h/img/${1}.img" # .img file
+
+# check root & file validity
+[ "$EUID" -eq 0 ] && [ -s "$t" ]
+
+# create mount dir
+mkdir -p $h/mnt
+
+# unmount on exit
+safexit() { umount $h/mnt/{dev{/pts,},sys,proc,} && echo Unmounting DONE; }
+trap safexit ERR EXIT
+
+# mount and bind for hardware access
+mount -o loop,dev,suid "$t" $h/mnt
+mnt() { for i in /dev{,/pts} /sys /proc; do mount --bind $i $h/mnt$i; done && echo Mounting DONE; }
+mnt
+
+# disable termux-exec
+unset LD_PRELOAD
+
+# start chroot
+chroot $h/mnt /bin/su - $2

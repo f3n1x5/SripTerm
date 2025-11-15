@@ -1,0 +1,29 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+# exit on error
+set -e
+
+# check root && non zero sized tar.gz
+[ $EUID -eq 0 ] && [ -s "$1" ]
+
+h=/data/data/com.termux/files/home
+f=($h/{img,mnt}) # important dirs
+s=${3:-2G} # size
+t="${f[0]}/$2.img" # distro name
+
+# create important dirs
+dC() { echo mkdir -p ${f[@]}; }
+
+mkrdy() {
+fallocate -l $s "$t" \ # allocate disk size
+&& mkfs.ext4 "$t" \
+&& mount -o loop,suid,dev "$t" ${f[1]} \ # mount as loop and suid
+&& echo Ready..
+}
+
+b4exit() { umount ${f[1]} && echo DONE; }
+trap b4exit EXIT ERR
+
+dC
+mkrdy
+tar xpf $1 -C $f --strip-components=1
