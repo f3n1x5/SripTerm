@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+set -e
+
+f="${1##*/}"
+p="${1%/*}"
+[ "$2" = "-x" ]||{ printf "Running Full process\n___\n" && \
+trap 'printf "___\n" ; rm -rv "$d"' EXIT && \
+d=$(mktemp -d) && \
+ecj -d $d "$1" && \
+dx --dex --output="${1%.java}.dex" $d;}
+dalvikvm -cp "${1%.java}.dex" "${f%.java}"
